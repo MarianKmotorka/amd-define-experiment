@@ -135,6 +135,9 @@ function define(arg1, arg2, arg3) {
   }
 
   function getMissingLibraries(fragment) {
+    if (!dependencies) {
+      return [];
+    }
     return dependencies
       .filter((dependency) => dependency !== "exports")
       .filter((dependency) => window.sharedLibraries[fragment][dependency] === undefined);
