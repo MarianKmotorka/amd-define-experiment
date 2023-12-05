@@ -20,6 +20,24 @@ function define(arg1, arg2, arg3) {
 
   const currentScriptTag = document.currentScript;
 
+  const fragmentName = currentScriptTag.dataset.fragmentName;
+  if (fragmentName) {
+    initializeSharedLibraries(fragmentName);
+
+    function tryConstructFragment() {
+      const missingLibs = getMissingLibraries(fragmentName);
+      if (missingLibs.length === 0) {
+        const mappedDeps = dependencies.map((dep) => window.sharedLibraries[fragmentName][dep]);
+        factory(...mappedDeps);
+      }
+    }
+
+    tryConstructFragment();
+    //TODO zabran znovuvolaniu define pre fragment ak uz bol definovany
+    window.addEventListener("shared-library-loaded", tryConstructFragment);
+    return;
+  }
+
   const fragments = currentScriptTag.dataset.fragments.split(",");
   const libraryName = currentScriptTag.dataset.globalName;
   // Create reference to the current library pointing to following names
@@ -29,12 +47,8 @@ function define(arg1, arg2, arg3) {
   const libraryUniqueInstance = currentScriptTag.dataset.unique === "true";
 
   fragments.forEach((fragment) => {
-    if (!window.sharedLibraries) {
-      window.sharedLibraries = {};
-    }
-    if (!window.sharedLibraries[fragment]) {
-      window.sharedLibraries[fragment] = {};
-    }
+    initializeSharedLibraries(fragment);
+
     if (!window.sharedLibrariesQueue) {
       window.sharedLibrariesQueue = {};
     }
@@ -58,6 +72,7 @@ function define(arg1, arg2, arg3) {
       if (existingFragmentName) {
         window.sharedLibraries[fragment][libraryName] = window.sharedLibraries[existingFragmentName][libraryName];
         defineVersionAndAliases(fragment);
+        window.dispatchEvent(new CustomEvent("shared-library-loaded"));
         return;
       }
 
@@ -70,6 +85,7 @@ function define(arg1, arg2, arg3) {
         const queueCallbacks = [...(window.sharedLibrariesQueue[fragment][libraryName] || [])];
         window.sharedLibrariesQueue[fragment][libraryName] = [];
         queueCallbacks.forEach((cb) => cb());
+        window.dispatchEvent(new CustomEvent("shared-library-loaded"));
         return;
       }
 
@@ -83,6 +99,15 @@ function define(arg1, arg2, arg3) {
 
     defineLibrary();
   });
+
+  function initializeSharedLibraries(fragment) {
+    if (!window.sharedLibraries) {
+      window.sharedLibraries = {};
+    }
+    if (!window.sharedLibraries[fragment]) {
+      window.sharedLibraries[fragment] = {};
+    }
+  }
 
   function defineVersionAndAliases(fragment) {
     // Add version information to the library instance

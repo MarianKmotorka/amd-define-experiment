@@ -1,7 +1,7 @@
 define(["react", "react-dom"], (React, ReactDOM) => {
   // const React = window.sharedLibraries["nushop"]["react"];
   // const ReactDOM = window.sharedLibraries["nushop"]["react-dom"];
-
+  console.log("called");
   let myElement = React.createElement(
     "div",
     { className: "my-class" },
