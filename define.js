@@ -31,10 +31,14 @@ function define(arg1, arg2, arg3) {
         factory(...mappedDeps);
       }
     }
-
     tryConstructFragment();
-    //TODO zabran znovuvolaniu define pre fragment ak uz bol definovany
-    window.addEventListener("shared-library-loaded", tryConstructFragment);
+
+    function handleLoadedEvent({ detail }) {
+      if (detail.fragment === fragmentName) {
+        tryConstructFragment();
+      }
+    }
+    window.addEventListener("shared-library-loaded", handleLoadedEvent);
     return;
   }
 
@@ -72,7 +76,7 @@ function define(arg1, arg2, arg3) {
       if (existingFragmentName) {
         window.sharedLibraries[fragment][libraryName] = window.sharedLibraries[existingFragmentName][libraryName];
         defineVersionAndAliases(fragment);
-        window.dispatchEvent(new CustomEvent("shared-library-loaded"));
+        dispatchLoadedEvent(fragment);
         return;
       }
 
@@ -81,11 +85,11 @@ function define(arg1, arg2, arg3) {
       if (missingLibraries.length === 0) {
         constructModule(fragment);
         defineVersionAndAliases(fragment);
+        dispatchLoadedEvent(fragment);
 
         const queueCallbacks = [...(window.sharedLibrariesQueue[fragment][libraryName] || [])];
         window.sharedLibrariesQueue[fragment][libraryName] = [];
         queueCallbacks.forEach((cb) => cb());
-        window.dispatchEvent(new CustomEvent("shared-library-loaded"));
         return;
       }
 
@@ -124,6 +128,10 @@ function define(arg1, arg2, arg3) {
         window.sharedLibraries[fragment][libraryAlias] = window.sharedLibraries[fragment][libraryName];
       });
     }
+  }
+
+  function dispatchLoadedEvent(fragment) {
+    window.dispatchEvent(new CustomEvent("shared-library-loaded", { detail: { fragment } }));
   }
 
   function getMissingLibraries(fragment) {
