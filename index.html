@@ -13,7 +13,7 @@
       integrity="sha256-S0lp&#x2B;k7zWUMk2ixteM6HZvu8L9Eh//OVrt&#x2B;ZfbCpmgY="
       crossorigin="anonymous"
       data-global-name="react"
-      data-fragments="main-menu"
+      data-fragments="nushop"
       data-version="18.2.0"
     ></script>
     <script
@@ -22,7 +22,7 @@
       integrity="sha256-IXWO0ITNDjfnNXIu5POVfqlgYoop36bDzhodR6LW5Pc="
       crossorigin="anonymous"
       data-global-name="react-dom"
-      data-fragments="main-menu"
+      data-fragments="nushop"
       data-version="18.2.0"
     ></script>
     <script
@@ -30,7 +30,7 @@
       src="https://cdn.jsdelivr.net/npm/react@16.0.0/umd/react.production.min.js"
       crossorigin="anonymous"
       data-global-name="react"
-      data-fragments="nushop"
+      data-fragments="main-menu"
       data-version="16.0.0"
     ></script>
     <script
@@ -38,7 +38,7 @@
       src="https://cdn.jsdelivr.net/npm/react-dom@16.0.0/umd/react-dom.production.min.js"
       crossorigin="anonymous"
       data-global-name="react-dom"
-      data-fragments="nushop"
+      data-fragments="main-menu"
       data-version="16.0.0"
     ></script>
 
@@ -99,8 +99,9 @@
   </head>
   <body>
     <div id="main-menu-root"></div>
+    <script async data-is-fragment="true" src="./main-menu.js"></script>
+
     <div id="nushop-root"></div>
-    <script async data-fragment-name="nushop" src="./nushop.js"></script>
-    <script async data-fragment-name="main-menu" src="./main-menu.js"></script>
+    <script async data-is-fragment="true" src="./nushop.js"></script>
   </body>
 </html>

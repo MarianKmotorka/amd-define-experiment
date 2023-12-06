@@ -20,25 +20,8 @@ function define(arg1, arg2, arg3) {
 
   const currentScriptTag = document.currentScript;
 
-  const fragmentName = currentScriptTag.dataset.fragmentName;
-  if (fragmentName) {
-    initializeSharedLibraries(fragmentName);
-
-    function tryConstructFragment() {
-      const missingLibs = getMissingLibraries(fragmentName);
-      if (missingLibs.length === 0) {
-        const mappedDeps = dependencies.map((dep) => window.sharedLibraries[fragmentName][dep]);
-        factory(...mappedDeps);
-      }
-    }
-    tryConstructFragment();
-
-    function handleLoadedEvent({ detail }) {
-      if (detail.fragment === fragmentName) {
-        tryConstructFragment();
-      }
-    }
-    window.addEventListener("shared-library-loaded", handleLoadedEvent);
+  if (currentScriptTag.dataset.isFragment) {
+    constructFragment();
     return;
   }
 
@@ -103,6 +86,26 @@ function define(arg1, arg2, arg3) {
 
     defineLibrary();
   });
+
+  function constructFragment() {
+    initializeSharedLibraries(name);
+
+    function tryConstructFragment() {
+      const missingLibs = getMissingLibraries(name);
+      if (missingLibs.length === 0) {
+        const mappedDeps = dependencies.map((dep) => window.sharedLibraries[name][dep]);
+        factory(...mappedDeps);
+      }
+    }
+    tryConstructFragment();
+
+    function handleLoadedEvent({ detail }) {
+      if (detail.fragment === name) {
+        tryConstructFragment();
+      }
+    }
+    window.addEventListener("shared-library-loaded", handleLoadedEvent);
+  }
 
   function initializeSharedLibraries(fragment) {
     if (!window.sharedLibraries) {

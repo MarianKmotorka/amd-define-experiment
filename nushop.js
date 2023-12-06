@@ -1,9 +1,9 @@
-define(["react", "react-dom"], (React, ReactDOM) => {
+define("nushop", ["react", "react-dom"], (React, ReactDOM) => {
   let myElement = React.createElement(
     "div",
     { className: "my-class" },
-    React.createElement("h1", null, `Hello, NUSHOP, React ${React.__version}!`)
+    React.createElement("h1", null, `NUSHOP, React ${React.__version}, ReactDOM ${ReactDOM.__version}`)
   );
 
-  ReactDOM.render(myElement, document.getElementById("nushop-root"));
+  ReactDOM.createRoot(document.getElementById("nushop-root")).render(myElement);
 });
