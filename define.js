@@ -34,7 +34,7 @@ function define(arg1, arg2, arg3) {
   const libraryUniqueInstance = currentScriptTag.dataset.unique === "true";
 
   fragments.forEach((fragment) => {
-    initializeSharedLibraries(fragment);
+    initDefaultSharedLibraries(fragment);
 
     if (!window.sharedLibrariesQueue) {
       window.sharedLibrariesQueue = {};
@@ -88,7 +88,7 @@ function define(arg1, arg2, arg3) {
   });
 
   function constructFragment() {
-    initializeSharedLibraries(name);
+    initDefaultSharedLibraries(name);
 
     function tryConstructFragment() {
       const missingLibs = getMissingLibraries(name);
@@ -107,7 +107,7 @@ function define(arg1, arg2, arg3) {
     window.addEventListener("shared-library-loaded", handleLoadedEvent);
   }
 
-  function initializeSharedLibraries(fragment) {
+  function initDefaultSharedLibraries(fragment) {
     if (!window.sharedLibraries) {
       window.sharedLibraries = {};
     }
