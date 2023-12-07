@@ -35,13 +35,7 @@ function define(arg1, arg2, arg3) {
 
   fragments.forEach((fragment) => {
     initDefaultSharedLibraries(fragment);
-
-    if (!window.sharedLibrariesQueue) {
-      window.sharedLibrariesQueue = {};
-    }
-    if (!window.sharedLibrariesQueue[fragment]) {
-      window.sharedLibrariesQueue[fragment] = {};
-    }
+    initDefaultSharedLibrariesQueue(fragment);
 
     function defineLibrary() {
       // Check if the instance of the currently laoded library
@@ -99,12 +93,11 @@ function define(arg1, arg2, arg3) {
     }
     tryConstructFragment();
 
-    function handleLoadedEvent({ detail }) {
+    window.addEventListener("shared-library-loaded", function ({ detail }) {
       if (detail.fragment === name) {
         tryConstructFragment();
       }
-    }
-    window.addEventListener("shared-library-loaded", handleLoadedEvent);
+    });
   }
 
   function initDefaultSharedLibraries(fragment) {
@@ -113,6 +106,15 @@ function define(arg1, arg2, arg3) {
     }
     if (!window.sharedLibraries[fragment]) {
       window.sharedLibraries[fragment] = {};
+    }
+  }
+
+  function initDefaultSharedLibrariesQueue(fragment) {
+    if (!window.sharedLibrariesQueue) {
+      window.sharedLibrariesQueue = {};
+    }
+    if (!window.sharedLibrariesQueue[fragment]) {
+      window.sharedLibrariesQueue[fragment] = {};
     }
   }
 
