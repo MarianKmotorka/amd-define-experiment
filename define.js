@@ -52,40 +52,48 @@ function define(arg1, arg2, arg3) {
       // If the instance exists just create a reference to it
       if (existingFragmentName) {
         window.sharedLibraries[fragment][libraryName] = window.sharedLibraries[existingFragmentName][libraryName];
-        defineVersionAndAliases(fragment);
-        dispatchLoadedEvent(fragment);
+        onAfterLibraryLoaded(fragment);
         return;
       }
 
-      const missingLibraries = getMissingLibraries(fragment);
+      const missingDependencies = getMissingDependencies(fragment);
 
-      if (missingLibraries.length === 0) {
+      if (missingDependencies.length === 0) {
         constructModule(fragment);
-        defineVersionAndAliases(fragment);
-        dispatchLoadedEvent(fragment);
-
-        const queueCallbacks = [...(window.sharedLibrariesQueue[fragment][libraryName] || [])];
-        window.sharedLibrariesQueue[fragment][libraryName] = [];
-        queueCallbacks.forEach((cb) => cb());
+        onAfterLibraryLoaded(fragment);
         return;
       }
 
-      missingLibraries.forEach((lib) => {
-        if (!window.sharedLibrariesQueue[fragment][lib]) {
-          window.sharedLibrariesQueue[fragment][lib] = [];
+      // If there is some dependency NOT loaded, add it to waiting queue
+      missingDependencies.forEach((dependency) => {
+        if (!window.sharedLibrariesQueue[fragment][dependency]) {
+          window.sharedLibrariesQueue[fragment][dependency] = [];
         }
-        window.sharedLibrariesQueue[fragment][lib] = [...window.sharedLibrariesQueue[fragment][lib], defineLibrary];
+
+        window.sharedLibrariesQueue[fragment][dependency] = [
+          ...window.sharedLibrariesQueue[fragment][dependency],
+          defineLibrary,
+        ];
       });
     }
 
     defineLibrary();
   });
 
+  function onAfterLibraryLoaded(fragment) {
+    defineVersionAndAliases(fragment);
+    dispatchLoadedEvent(fragment);
+
+    const queueCallbacks = [...(window.sharedLibrariesQueue[fragment][libraryName] || [])];
+    window.sharedLibrariesQueue[fragment][libraryName] = [];
+    queueCallbacks.forEach((cb) => cb());
+  }
+
   function constructFragment() {
     initDefaultSharedLibraries(name);
 
     function tryConstructFragment() {
-      const missingLibs = getMissingLibraries(name);
+      const missingLibs = getMissingDependencies(name);
       if (missingLibs.length === 0) {
         const mappedDeps = dependencies.map((dep) => window.sharedLibraries[name][dep]);
         factory(...mappedDeps);
@@ -139,7 +147,7 @@ function define(arg1, arg2, arg3) {
     window.dispatchEvent(new CustomEvent("shared-library-loaded", { detail: { fragment } }));
   }
 
-  function getMissingLibraries(fragment) {
+  function getMissingDependencies(fragment) {
     if (!dependencies) {
       return [];
     }
