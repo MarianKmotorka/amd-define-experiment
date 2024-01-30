@@ -87,7 +87,7 @@ function define(arg1, arg2, arg3) {
   });
 
   function onAfterLibraryLoaded(fragment) {
-    window[`sharedLibraries_${fragment}_${libraryName}`] = window.sharedLibraries[fragment][libraryName]; // needed for our UMD fragments
+    window["sharedLibraries_" + fragment + "_" + libraryName] = window.sharedLibraries[fragment][libraryName]; // needed for our UMD fragments
     defineVersionAndAliases(fragment);
     dispatchLoadedEvent(fragment);
 
