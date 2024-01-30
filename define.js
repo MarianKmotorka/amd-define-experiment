@@ -25,7 +25,13 @@ function define(arg1, arg2, arg3) {
     return;
   }
 
-  const fragments = currentScriptTag.dataset.fragments.split(",");
+  const fragments = currentScriptTag.dataset.fragments?.split(",");
+
+  if (!fragments) {
+    handleRegularDefine(name, dependencies, factory);
+    return;
+  }
+
   const libraryName = currentScriptTag.dataset.globalName;
   // Create reference to the current library pointing to following names
   const libraryAliases = currentScriptTag.dataset.aliases;
@@ -81,6 +87,7 @@ function define(arg1, arg2, arg3) {
   });
 
   function onAfterLibraryLoaded(fragment) {
+    window[`sharedLibraries_${fragment}_${libraryName}`] = window.sharedLibraries[fragment][libraryName]; // needed for our UMD fragments
     defineVersionAndAliases(fragment);
     dispatchLoadedEvent(fragment);
 
@@ -172,6 +179,10 @@ function define(arg1, arg2, arg3) {
     } else {
       window.sharedLibraries[fragment][libraryName] = factory(...mappedDependencies);
     }
+  }
+
+  function handleRegularDefine(name, dependencies, factory) {
+    // TODO
   }
 }
 
