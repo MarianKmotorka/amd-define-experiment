@@ -25,13 +25,13 @@ function define(arg1, arg2, arg3) {
     return;
   }
 
-  const fragments = currentScriptTag.dataset.fragments?.split(",");
-
-  if (!fragments) {
+  const isOurSharedLibraryScript = !!currentScriptTag.dataset.fragments;
+  if (!isOurSharedLibraryScript) {
     handleRegularDefine(name, dependencies, factory);
     return;
   }
 
+  const fragments = currentScriptTag.dataset.fragments.split(",");
   const libraryName = currentScriptTag.dataset.globalName;
   // Create reference to the current library pointing to following names
   const libraryAliases = currentScriptTag.dataset.aliases;
@@ -182,7 +182,10 @@ function define(arg1, arg2, arg3) {
   }
 
   function handleRegularDefine(name, dependencies, factory) {
-    // TODO
+    // We only support third party AMD libraries without dependencies
+    if (!Array.isArray(dependencies) || dependencies.length === 0) {
+      factory();
+    }
   }
 }
 
