@@ -182,10 +182,30 @@ function define(arg1, arg2, arg3) {
   }
 
   function handleRegularDefine(name, dependencies, factory) {
-    // We only support third party AMD libraries without dependencies
-    if (!Array.isArray(dependencies) || dependencies.length === 0) {
-      factory();
+    window.globalLibs = window.globalLibs || {};
+    window.globalLibsLoadingQueue = window.globalLibsLoadingQueue || {};
+
+    function tryConstructGlobalLib() {
+      const areAllDepsDefined =
+        !dependencies || dependencies.every((dep) => Object.keys(window.globalLibs).includes(dep));
+
+      if (areAllDepsDefined) {
+        const lib = factory(...dependencies.map((dep) => window.globalLibs[dep]));
+        if (name) {
+          window.globalLibs[name] = lib;
+        }
+
+        const queueCallbacks = [...(window.globalLibsLoadingQueue[name] || [])];
+        window.globalLibsLoadingQueue[name] = [];
+        queueCallbacks.forEach((cb) => cb());
+        return;
+      }
+
+      window.globalLibsLoadingQueue[name] = window.globalLibsLoadingQueue[name] || [];
+      window.globalLibsLoadingQueue[name].push(tryConstructGlobalLib);
     }
+
+    tryConstructGlobalLib();
   }
 }
 
