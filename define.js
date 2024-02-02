@@ -181,15 +181,15 @@ function define(arg1, arg2, arg3) {
     }
   }
 
-  function handleRegularDefine(name, dependencies, factory) {
+  function handleRegularDefine(name, _dependencies, factory) {
+    const dependencies = [...(_dependencies || [])];
     window.globalLibs = window.globalLibs || {};
     window.globalLibsLoadingQueue = window.globalLibsLoadingQueue || {};
 
     function tryConstructGlobalLib() {
-      const areAllDepsDefined =
-        !dependencies || dependencies.every((dep) => Object.keys(window.globalLibs).includes(dep));
+      const missingDeps = dependencies.filter((dep) => !Object.keys(window.globalLibs).includes(dep));
 
-      if (areAllDepsDefined) {
+      if (missingDeps.length === 0) {
         const lib = factory(...dependencies.map((dep) => window.globalLibs[dep]));
         if (name) {
           window.globalLibs[name] = lib;
@@ -201,8 +201,10 @@ function define(arg1, arg2, arg3) {
         return;
       }
 
-      window.globalLibsLoadingQueue[name] = window.globalLibsLoadingQueue[name] || [];
-      window.globalLibsLoadingQueue[name].push(tryConstructGlobalLib);
+      missingDeps.forEach((dep) => {
+        window.globalLibsLoadingQueue[dep] = window.globalLibsLoadingQueue[dep] || [];
+        window.globalLibsLoadingQueue[dep].push(tryConstructGlobalLib);
+      });
     }
 
     tryConstructGlobalLib();
