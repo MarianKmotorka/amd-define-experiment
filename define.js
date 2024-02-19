@@ -100,10 +100,16 @@ function define(arg1, arg2, arg3) {
     initDefaultSharedLibraries(name);
 
     function tryConstructFragment() {
+      window.initializedFragments = window.initializedFragments || {};
+      if (window.initializedFragments[name]) {
+        return;
+      }
+
       const missingLibs = getMissingDependencies(name);
       if (missingLibs.length === 0) {
         const mappedDeps = dependencies.map((dep) => window.sharedLibraries[name][dep]);
         factory(...mappedDeps);
+        window.initializedFragments[name] = true;
       }
     }
     tryConstructFragment();
