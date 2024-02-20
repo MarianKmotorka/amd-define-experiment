@@ -41,7 +41,6 @@ function define(arg1, arg2, arg3) {
 
   fragments.forEach((fragment) => {
     initDefaultSharedLibraries(fragment);
-    initDefaultSharedLibrariesQueue(fragment);
 
     function defineLibrary() {
       // Check if the instance of the currently laoded library
@@ -72,12 +71,12 @@ function define(arg1, arg2, arg3) {
 
       // If there is some dependency NOT loaded, add it to waiting queue
       missingDependencies.forEach((dependency) => {
-        if (!window.sharedLibrariesQueue[fragment][dependency]) {
-          window.sharedLibrariesQueue[fragment][dependency] = [];
+        if (!window.sharedLibraries.LOADING_QUEUE[fragment][dependency]) {
+          window.sharedLibraries.LOADING_QUEUE[fragment][dependency] = [];
         }
 
-        window.sharedLibrariesQueue[fragment][dependency] = [
-          ...window.sharedLibrariesQueue[fragment][dependency],
+        window.sharedLibraries.LOADING_QUEUE[fragment][dependency] = [
+          ...window.sharedLibraries.LOADING_QUEUE[fragment][dependency],
           defineLibrary,
         ];
       });
@@ -91,8 +90,8 @@ function define(arg1, arg2, arg3) {
     defineVersionAndAliases(fragment);
     dispatchLoadedEvent(fragment);
 
-    const queueCallbacks = [...(window.sharedLibrariesQueue[fragment][libraryName] || [])];
-    window.sharedLibrariesQueue[fragment][libraryName] = [];
+    const queueCallbacks = [...(window.sharedLibraries.LOADING_QUEUE[fragment][libraryName] || [])];
+    window.sharedLibraries.LOADING_QUEUE[fragment][libraryName] = [];
     queueCallbacks.forEach((cb) => cb());
   }
 
@@ -100,16 +99,15 @@ function define(arg1, arg2, arg3) {
     initDefaultSharedLibraries(name);
 
     function tryConstructFragment() {
-      window.initializedFragments = window.initializedFragments || {};
-      if (window.initializedFragments[name]) {
+      window.sharedLibraries.INITIALIZED_FRAGMENTS = window.sharedLibraries.INITIALIZED_FRAGMENTS || {};
+      if (window.sharedLibraries.INITIALIZED_FRAGMENTS[name]) {
         return;
       }
-
       const missingLibs = getMissingDependencies(name);
       if (missingLibs.length === 0) {
         const mappedDeps = dependencies.map((dep) => window.sharedLibraries[name][dep]);
         factory(...mappedDeps);
-        window.initializedFragments[name] = true;
+        window.sharedLibraries.INITIALIZED_FRAGMENTS[name] = true;
       }
     }
     tryConstructFragment();
@@ -128,14 +126,11 @@ function define(arg1, arg2, arg3) {
     if (!window.sharedLibraries[fragment]) {
       window.sharedLibraries[fragment] = {};
     }
-  }
-
-  function initDefaultSharedLibrariesQueue(fragment) {
-    if (!window.sharedLibrariesQueue) {
-      window.sharedLibrariesQueue = {};
+    if (!window.sharedLibraries.LOADING_QUEUE) {
+      window.sharedLibraries.LOADING_QUEUE = {};
     }
-    if (!window.sharedLibrariesQueue[fragment]) {
-      window.sharedLibrariesQueue[fragment] = {};
+    if (!window.sharedLibraries.LOADING_QUEUE[fragment]) {
+      window.sharedLibraries.LOADING_QUEUE[fragment] = {};
     }
   }
 
@@ -189,27 +184,29 @@ function define(arg1, arg2, arg3) {
 
   function handleRegularDefine(name, _dependencies, factory) {
     const dependencies = [...(_dependencies || [])];
-    window.globalLibs = window.globalLibs || {};
-    window.globalLibsLoadingQueue = window.globalLibsLoadingQueue || {};
+    window.sharedLibraries = window.sharedLibraries || {};
+    window.sharedLibraries.GLOBAL_LIBS = window.sharedLibraries.GLOBAL_LIBS || {};
+    window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE = window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE || {};
 
     function tryConstructGlobalLib() {
-      const missingDeps = dependencies.filter((dep) => !Object.keys(window.globalLibs).includes(dep));
+      const missingDeps = dependencies.filter((dep) => !Object.keys(window.sharedLibraries.GLOBAL_LIBS).includes(dep));
 
       if (missingDeps.length === 0) {
-        const lib = factory(...dependencies.map((dep) => window.globalLibs[dep]));
+        const lib = factory(...dependencies.map((dep) => window.sharedLibraries.GLOBAL_LIBS[dep]));
         if (name) {
-          window.globalLibs[name] = lib;
+          window.sharedLibraries.GLOBAL_LIBS[name] = lib;
         }
 
-        const queueCallbacks = [...(window.globalLibsLoadingQueue[name] || [])];
-        window.globalLibsLoadingQueue[name] = [];
+        const queueCallbacks = [...(window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE[name] || [])];
+        window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE[name] = [];
         queueCallbacks.forEach((cb) => cb());
         return;
       }
 
       missingDeps.forEach((dep) => {
-        window.globalLibsLoadingQueue[dep] = window.globalLibsLoadingQueue[dep] || [];
-        window.globalLibsLoadingQueue[dep].push(tryConstructGlobalLib);
+        window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE[dep] =
+          window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE[dep] || [];
+        window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE[dep].push(tryConstructGlobalLib);
       });
     }
 
