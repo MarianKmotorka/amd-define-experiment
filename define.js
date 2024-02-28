@@ -189,7 +189,9 @@ function define(arg1, arg2, arg3) {
     window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE = window.sharedLibraries.GLOBAL_LIBS_LOADING_QUEUE || {};
 
     function tryConstructGlobalLib() {
-      const missingDeps = dependencies.filter((dep) => !Object.keys(window.sharedLibraries.GLOBAL_LIBS).includes(dep));
+      const missingDeps = dependencies
+        .filter((dep) => dep !== "exports")
+        .filter((dep) => !Object.keys(window.sharedLibraries.GLOBAL_LIBS).includes(dep));
 
       if (missingDeps.length === 0) {
         const lib = factory(...dependencies.map((dep) => window.sharedLibraries.GLOBAL_LIBS[dep]));
